@@ -2,20 +2,26 @@ package com.raif.subscribemanager.services
 
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.context.ApplicationEventPublisher
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 import org.telegram.telegrambots.bots.TelegramLongPollingBot
+import org.telegram.telegrambots.meta.api.methods.AnswerCallbackQuery
 import org.telegram.telegrambots.meta.api.methods.groupadministration.CreateChatInviteLink
 import org.telegram.telegrambots.meta.api.methods.groupadministration.UnbanChatMember
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage
+import org.telegram.telegrambots.meta.api.methods.send.SendPhoto
 import org.telegram.telegrambots.meta.api.objects.ChatInviteLink
+import org.telegram.telegrambots.meta.api.objects.InputFile
 import org.telegram.telegrambots.meta.api.objects.Update
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboard
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException
 
 @Service
 class TelegramService(
     @Value("\${telegram.botToken}")
     private val botToken: String,
+    private val eventPublisher: ApplicationEventPublisher,
 ) : TelegramLongPollingBot(botToken) {
 
     @Value("\${telegram.botName}")
@@ -24,25 +30,61 @@ class TelegramService(
         return botName
     }
 
-    private var id = 1
+    private val logger = LoggerFactory.getLogger("TelegramService")
     override fun onUpdateReceived(update: Update) {
-        println(update)
-        if (update.hasChatJoinRequest()) {
-            val req = update.chatJoinRequest
-            val userId = req.user.id
-            val name = req.inviteLink.name
-            val link = req.inviteLink.inviteLink
-            execute(SendMessage(userId.toString(), "aboba"))
-            println("req: $userId, $name, $link")
-        }
-        if (update.hasMessage()) {
-            createInviteLink(update.message.chatId, id++)
-        }
+        logger.info("Received a new update: {}", update)
+        eventPublisher.publishEvent(update)
     }
 
-    private val logger = LoggerFactory.getLogger("TelegramService")
+    fun sendMessage(
+        chatId: Long,
+        text: String,
+        replyMarkup: ReplyKeyboard? = null,
+        markdown: Boolean = false,
+        replyTo: Int? = null
+    ): Int {
+        val send = SendMessage(chatId.toString(), text)
+        if (markdown) {
+            send.parseMode = "markdownV2"
+        } else {
+            send.parseMode = "HTML"
+        }
+        if (replyTo != null) {
+            send.replyToMessageId = replyTo
+        }
+        if (replyMarkup != null) {
+            send.replyMarkup = replyMarkup
+        }
+        val e = execute(send)
+        return e.messageId
+    }
 
+    fun sendPhoto(chatId: Long, url: String, text: String = "", replyMarkup: ReplyKeyboard? = null, markdown: Boolean = false, replyTo: Int? = null): Int {
 
+        val send = SendPhoto(chatId.toString(), InputFile(url))
+        send.caption = text
+        if (replyTo != null) {
+            send.replyToMessageId = replyTo
+        }
+        if (replyMarkup != null) {
+            send.replyMarkup = replyMarkup
+        }
+        if (markdown) {
+            send.parseMode = "markdownV2"
+        } else {
+            send.parseMode = "HTML"
+        }
+        val e = execute(send)
+        return e.messageId
+    }
+
+    fun answerCallback(id: String, text: String = "", alert: Boolean = false) {
+        val send = AnswerCallbackQuery(id)
+        send.text = text
+        send.showAlert = alert
+        execute(send)
+
+    }
 
 
 
