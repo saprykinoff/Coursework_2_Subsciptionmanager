@@ -86,8 +86,6 @@ class TelegramService(
 
     }
 
-
-
     fun removeUserFromGroup(chatId: Long, userId: Long): Boolean {
         val setChatMemberStatus = UnbanChatMember(chatId.toString(), userId)
         try {
@@ -99,12 +97,11 @@ class TelegramService(
         return false
     }
 
-
-    fun createInviteLink(chatId: Long, linkId: Int): ChatInviteLink {
+    fun createInviteLink(chatId: Long, linkId: String): ChatInviteLink {
         println("Create_Invite")
         val invite = CreateChatInviteLink(chatId.toString())
         invite.createsJoinRequest = true
-        invite.name = "Приглашалка номер #$linkId"
+        invite.name = linkId
         return execute(invite)
     }
 }

@@ -11,21 +11,14 @@ import org.springframework.stereotype.Repository
 class GroupEntity (
     @Id
     val id: Long = 0,
-
-    @Column
     var searchName: String = "",
-
-    @Column
     var price: Double = 0.0,
-
-    @Column
     var period: Int = 1,
-
-    @Column
     var ownerId: Long = 0,
 )
 
 @Repository
 interface GroupEntityRepository : JpaRepository<GroupEntity, Long> {
+    fun findBySearchName(name: String): GroupEntity?
 
 }
