@@ -9,9 +9,12 @@ import org.telegram.telegrambots.bots.TelegramLongPollingBot
 import org.telegram.telegrambots.meta.api.methods.AnswerCallbackQuery
 import org.telegram.telegrambots.meta.api.methods.groupadministration.CreateChatInviteLink
 import org.telegram.telegrambots.meta.api.methods.groupadministration.UnbanChatMember
+import org.telegram.telegrambots.meta.api.methods.groupadministration.ApproveChatJoinRequest
+import org.telegram.telegrambots.meta.api.methods.groupadministration.DeclineChatJoinRequest
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage
 import org.telegram.telegrambots.meta.api.methods.send.SendPhoto
 import org.telegram.telegrambots.meta.api.objects.ChatInviteLink
+import org.telegram.telegrambots.meta.api.objects.ChatJoinRequest
 import org.telegram.telegrambots.meta.api.objects.InputFile
 import org.telegram.telegrambots.meta.api.objects.Update
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboard
@@ -78,14 +81,6 @@ class TelegramService(
         return e.messageId
     }
 
-    fun answerCallback(id: String, text: String = "", alert: Boolean = false) {
-        val send = AnswerCallbackQuery(id)
-        send.text = text
-        send.showAlert = alert
-        execute(send)
-
-    }
-
     fun removeUserFromGroup(chatId: Long, userId: Long): Boolean {
         val setChatMemberStatus = UnbanChatMember(chatId.toString(), userId)
         try {
@@ -103,5 +98,15 @@ class TelegramService(
         invite.createsJoinRequest = true
         invite.name = linkId
         return execute(invite)
+    }
+
+    fun approveRequest(req: ChatJoinRequest) {
+        execute(ApproveChatJoinRequest(req.chat.id.toString(), req.user.id))
+
+
+    }
+
+    fun declineRequest(req: ChatJoinRequest) {
+        execute(DeclineChatJoinRequest(req.chat.id.toString(), req.user.id))
     }
 }

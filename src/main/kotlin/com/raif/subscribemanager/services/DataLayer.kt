@@ -3,6 +3,8 @@ package com.raif.subscribemanager.services
 import com.raif.subscribemanager.errors.*
 import com.raif.subscribemanager.models.*
 import org.springframework.stereotype.Service
+import java.time.Instant
+import java.util.*
 import kotlin.jvm.optionals.getOrNull
 
 @Service
@@ -32,7 +34,7 @@ class DataLayer(
         return groupEntityRepository.findBySearchName(name)
     }
 
-    fun createSubscribe(name: String, url: String): Subscription? {
+    fun createSubscription(name: String, url: String, createdByUserId: Long): Subscription? {
         val sub = Subscription()
         subscriptionRepository.saveAndFlush(sub)
         val res = utilityService.createSubscriptionQr(sub.id, name)
@@ -43,11 +45,29 @@ class DataLayer(
 
         sub.qrId = res.getJSONObject("qr").getString("id")
         sub.qrUrl = res.getJSONObject("qr").getString("url")
+        sub.createdByUserId = createdByUserId
         println("qrId: ${sub.qrId}")
         println("qrUrl: ${sub.qrUrl}")
         sub.inviteLink = url
         subscriptionRepository.saveAndFlush(sub)
         return sub
     }
+
+    fun getSubByLink(link: String): Subscription? {
+        return subscriptionRepository.findByInviteLink(link)
+    }
+    fun saveSub(sub: Subscription) {
+        subscriptionRepository.saveAndFlush(sub)
+    }
+    fun deleteSub(id: Int) {
+        subscriptionRepository.deleteById(id)
+    }
+    fun getExpiredSubs(): List<Subscription> {
+        return subscriptionRepository.findAllByNextPaymentBefore(Date.from(Instant.now()))
+    }
+    fun getUnpaidSubs(): List<Subscription> {
+        return subscriptionRepository.findAllByNextPaymentIsNull()
+    }
+
 
 }

@@ -5,6 +5,8 @@ import org.springframework.stereotype.Service
 
 @Service
 class UtilityService {
+    val subPrefix = "sub_test_0_"
+
     fun secondsToTime(secs: Int): String {
         return "$secs секунд"
     }
@@ -13,7 +15,7 @@ class UtilityService {
         val response = khttp.post(
             "http://147.78.66.234:8081/payment-api/v1/subscription",
             json = mapOf(
-                "id" to "sub_$id",
+                "id" to "$subPrefix$id",
                 "subscriptionPurpose" to "Подписка на группу $name",
                 "redirectUrl" to ""
             )

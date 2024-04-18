@@ -1,8 +1,10 @@
 package com.raif.subscribemanager.models
 
 import jakarta.persistence.*
+import org.springframework.data.annotation.CreatedDate
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.stereotype.Repository
+import java.time.Instant
 import java.util.*
 
 
@@ -14,13 +16,20 @@ class Subscription (
     val id: Int = 0,
     var qrId: String = "",
     var qrUrl: String = "",
-    var userId: Long = 0,
+    var userId: Long? = null,
+    var createdByUserId: Long = 0,
     var inviteLink: String = "",
-    var nextPayment: Date? = null
+    var nextPayment: Date? = null,
+    var createdDate: Date= Date.from(Instant.now()),
+    //TODO внешний ключ на группу
 )
 
 
 @Repository
 interface SubscriptionRepository : JpaRepository<Subscription, Int> {
+    fun findAllByUserId(id: Long): List<Subscription>
+    fun findByInviteLink(link: String): Subscription?
+    fun findAllByNextPaymentBefore(date: Date): List<Subscription>
+    fun findAllByNextPaymentIsNull(): List<Subscription>
 
 }
