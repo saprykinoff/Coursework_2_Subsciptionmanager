@@ -23,9 +23,27 @@ class TelegramManager (
     private val logger = LoggerFactory.getLogger("Manager")
     @EventListener
     fun update(update: Update) {
+
         if (update.hasMessage()) {
             val msg = update.message
-            val text = if (msg.hasText()) {msg.text} else {null}
+            if (msg.text == "/test") {
+                //TODO сделать работующие функции создания\получения подписки\пеймента
+                val sub = utilityService.createSubscription("abc", msg.from.id) ?: return
+                var qr = utilityService.getSubQr(sub.id) ?: return
+                while (qr.getString("status") == "INACTIVE") {
+                    qr = utilityService.getSubQr(sub.id) ?: return
+                    Thread.sleep(1000)
+                }
+                println("SUBSCRIBED")
+                val pay = utilityService.createPaySubQr(sub.id, 123.0) ?: return
+                println(pay.id)
+                while (true ) {
+                    println("polling...")
+                    val payres = utilityService.getPaySubQr(pay.id)
+                    println( payres )
+                    Thread.sleep(1000)
+                }
+            }
             if (msg.chat.isUserChat) {
                 userController(msg)
             } else if (msg.chat.isSuperGroupChat) {
@@ -78,10 +96,7 @@ class TelegramManager (
                 telegramService.sendMessage(msg.chatId, "Группа не найдена")
                 return
             }
-            val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
-            val current = LocalDateTime.now().format(formatter)
-            val link = telegramService.createInviteLink(group.id, current)
-            val sub = dataLayer.createSubscription(name, link.inviteLink, msg.from.id)
+            val sub = utilityService.createSubscription(name, msg.from.id)
             if (sub == null) {
                 telegramService.sendMessage(msg.chatId, "Произошла ошибка. Попробуйте позже")
                 return

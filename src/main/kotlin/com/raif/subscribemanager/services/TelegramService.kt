@@ -19,6 +19,8 @@ import org.telegram.telegrambots.meta.api.objects.InputFile
 import org.telegram.telegrambots.meta.api.objects.Update
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboard
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 
 @Service
 class TelegramService(
@@ -92,18 +94,18 @@ class TelegramService(
         return false
     }
 
-    fun createInviteLink(chatId: Long, linkId: String): ChatInviteLink {
+    fun createInviteLink(chatId: Long): ChatInviteLink {
         println("Create_Invite")
         val invite = CreateChatInviteLink(chatId.toString())
         invite.createsJoinRequest = true
-        invite.name = linkId
+        val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
+        val currentTime = LocalDateTime.now().format(formatter)
+        invite.name = currentTime
         return execute(invite)
     }
 
     fun approveRequest(req: ChatJoinRequest) {
         execute(ApproveChatJoinRequest(req.chat.id.toString(), req.user.id))
-
-
     }
 
     fun declineRequest(req: ChatJoinRequest) {

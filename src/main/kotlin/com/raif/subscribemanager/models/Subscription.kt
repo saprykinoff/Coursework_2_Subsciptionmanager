@@ -21,7 +21,9 @@ class Subscription (
     var inviteLink: String = "",
     var nextPayment: Date? = null,
     var createdDate: Date= Date.from(Instant.now()),
-    //TODO внешний ключ на группу
+    @ManyToOne
+    var group: GroupEntity = GroupEntity(),
+    //var status: String = "INACTIVE", //INACTIVE - подписка создана не оплачена, ACTIVE - подписка оплачена, DEAD - подписка аннулированна
 )
 
 
