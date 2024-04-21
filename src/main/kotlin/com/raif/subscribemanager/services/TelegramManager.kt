@@ -85,7 +85,36 @@ class TelegramManager (
     fun userController(msg: Message) {
         val text = if (msg.hasText()) {msg.text} else {null}
         val args = text?.split(" ")
-        if (args?.getOrNull(0) in arrayOf("/sub", "/subscribe")  ) {
+        val command = args?.getOrNull(0)
+        if (command in arrayOf("/help", "/start")) {
+            telegramService.sendMessage(msg.chatId,
+                "Это бот для организации подписочного доступа к группам.\n\n" +
+                    "Если вы администратор, воспользуйтесь командой /helpadmin чтобы получить инстркцию как подключить вашу группу к боту.\n\n" +
+                    "Если вы хотите подписаться на группу, воспользуйтесь командой /helpsub чтобы узнать детали"
+            )
+        } else if (command == "/helpadmin") {
+            telegramService.sendMessage(msg.chatId,
+                "Для создания группы выполните следующие шаги:\n\n" +
+                    "1) Создайте группу в телеграмме\n" +
+                    "2) Добавьте этого бота в группу и назначте его администратором (Ban users, Invite users via link)\n" +
+                    "3) Используйте команду <code>/reg </code><code>name [price = 100 [duration =30]]</code> " +
+                        "чтобы зарегестрировать группу в системе, где <code>name</code> это уникальное имя вашей группы, " +
+                        "<code>price</code> это стоимость в рублях за <code>duration</code> дней\n" +
+                    "4) Сообщите ваше уникальное имя своим подписчикам, чтобы они смогли подписываться")
+
+        } else if (command == "/helpsub") {
+            telegramService.sendMessage(msg.chatId,
+                "1) Для того чтобы оплатить подписку используйте команду <code>/sub</code> <code>name</code>, " +
+                         "где <code>name</code> это уникальное имя группы на которую вы хотите подписаться\n" +
+                    "2) Оплатите полученный QR-code используя сайт https://pay.raif.ru/pay/rfuture/#/reader\n" +
+                    "3) После оплаты вы получите уникальную ссылку на группу. Вы можете как воспользоваться ей сами, так " +
+                        "и отдать ее кому-то. Важно: Подписка уже активна, даже если никто еще не вступил по ссылке\n"+
+                    "4) Перейдя по ссылке вы автоматически будете добавлены в группу\n\n" +
+                    "5) Посмотреть активные подписки можно используя команду /list\n\n" +
+                    "6) В случае необходимости воспользуйтесь командой /unsub <code>index</code> чтобы аннулировать подписку под номером index. " +
+                        "Чтобы узнать номер воспользуйтесь коммандой /list (цифра в скобках и есть необходимый номер) "
+            )
+        } else if (command in arrayOf("/sub", "/subscribe")  ) {
             val name = args?.getOrNull(1)
             if (name == null) {
                 telegramService.sendMessage(msg.chatId, "Укажите называние группы после /sub[scribe] ")
@@ -103,7 +132,7 @@ class TelegramManager (
             }
             telegramService.sendMessage(msg.chatId, "Оплатите <a href=\"${sub.qrUrl}\">подписку</a>")
 
-        } else if (args?.getOrNull(0) in arrayOf("/unsub", "/unsubscribe")  ) {
+        } else if (command in arrayOf("/unsub", "/unsubscribe")  ) {
             val groupIndex = args?.getOrNull(1)?.toIntOrNull()
             if(groupIndex == null) {
                 telegramService.sendMessage(msg.chatId, "Укажите индекс подписки которую вы хотите отменить")
@@ -122,7 +151,7 @@ class TelegramManager (
                 telegramService.removeUserFromGroup(sub.group.id, sub.userId!!)
             }
 
-        } else if (args?.getOrNull(0) in arrayOf("/list")) {
+        } else if (command in arrayOf("/list")) {
             val subs = dataLayer.getUserSubs(msg.chatId)
 
             if (subs.isEmpty()) {
@@ -143,6 +172,8 @@ class TelegramManager (
                 telegramService.sendMessage(msg.chatId, textPay)
                 telegramService.sendMessage(msg.chatId, textSub)
             }
+        } else {
+            telegramService.sendMessage(msg.chatId, "Не понимаю что вы хотели сказать. Используйте /helpadmin или /helpsub")
         }
     }
 
@@ -152,7 +183,7 @@ class TelegramManager (
         val args = text?.split(" ")
         if (args?.getOrNull(0) in arrayOf("/reg", "/register")) {
             val price = args?.getOrNull(2)?.toDoubleOrNull() ?: 100.0
-            val period = args?.getOrNull(3)?.toIntOrNull() ?: 10
+            val period = args?.getOrNull(3)?.toIntOrNull() ?: 30
 
             try {
                 val group = dataLayer.registerGroup(msg.chatId, msg.from.id, args?.getOrNull(1), price, period)
