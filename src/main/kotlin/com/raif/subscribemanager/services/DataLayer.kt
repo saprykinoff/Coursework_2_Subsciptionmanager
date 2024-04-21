@@ -28,35 +28,14 @@ class DataLayer(
         groupEntityRepository.saveAndFlush(newGroup)
         return newGroup
     }
-
     fun findGroup(name: String?): GroupEntity? {
         if (name == null) return null
         return groupEntityRepository.findBySearchName(name)
     }
 
-    fun createSubscription(group: GroupEntity, url: String, createdByUserId: Long): Subscription? {
-        /*val sub = Subscription()
-        sub.group = group
-        subscriptionRepository.saveAndFlush(sub)
-        val res = utilityService.createSubQr(sub.id, group.searchName)
-        if (res == null) {
-            subscriptionRepository.deleteById(sub.id)
-            return null
-        }
-        sub.qrId = res.getJSONObject("qr").getString("id")
-        sub.qrUrl = res.getJSONObject("qr").getString("url")
-        sub.createdByUserId = createdByUserId
 
-        println("qrId: ${sub.qrId}")
-        println("qrUrl: ${sub.qrUrl}")
-        sub.inviteLink = url
-        subscriptionRepository.saveAndFlush(sub)
-        return sub*/
-        return null
-    }
-
-    fun getSubByLink(link: String): Subscription? {
-        return subscriptionRepository.findByInviteLink(link)
+    fun getSub(subId: Int) :Subscription? {
+        return subscriptionRepository.findById(subId).getOrNull()
     }
     fun saveSub(sub: Subscription) {
         subscriptionRepository.saveAndFlush(sub)
@@ -64,12 +43,19 @@ class DataLayer(
     fun deleteSub(id: Int) {
         subscriptionRepository.deleteById(id)
     }
+    fun getSubByLink(link: String): Subscription? {
+        return subscriptionRepository.findByInviteLink(link)
+    }
     fun getExpiredSubs(): List<Subscription> {
-        return subscriptionRepository.findAllByNextPaymentBefore(Date.from(Instant.now()))
+        return subscriptionRepository.findAllByNextPaymentBeforeAndStatusNot(Date.from(Instant.now()), "DEAD")
     }
     fun getUnpaidSubs(): List<Subscription> {
-        return subscriptionRepository.findAllByNextPaymentIsNull()
+        return subscriptionRepository.findAllByNextPaymentIsNullAndStatusNot("DEAD")
     }
+    fun getUserSubs(userId: Long): List<Subscription> {
+        return subscriptionRepository.findUserSubs(userId)
+    }
+
 
     fun getActivePays(): List<Payment> {
         return paymentRepository.findAllByStatus("IN_PROGRESS")
@@ -84,11 +70,7 @@ class DataLayer(
     fun getPay(id: Int): Payment? {
         return paymentRepository.findById(id).getOrNull()
     }
-
     fun hasActivePay(subId: Int): Boolean {
         return paymentRepository.findBySubIdAndStatus(subId, "IN_PROGRESS") != null
-    }
-    fun getSub(subId: Int) :Subscription? {
-        return subscriptionRepository.findById(subId).getOrNull()
     }
 }

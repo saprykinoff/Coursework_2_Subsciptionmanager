@@ -104,9 +104,45 @@ class TelegramManager (
             telegramService.sendMessage(msg.chatId, "Оплатите <a href=\"${sub.qrUrl}\">подписку</a>")
 
         } else if (args?.getOrNull(0) in arrayOf("/unsub", "/unsubscribe")  ) {
-            TODO()
+            val groupIndex = args?.getOrNull(1)?.toIntOrNull()
+            if(groupIndex == null) {
+                telegramService.sendMessage(msg.chatId, "Укажите индекс подписки которую вы хотите отменить")
+                return
+            }
+            val subs = dataLayer.getUserSubs(msg.chatId)
+            if (groupIndex < 1 || subs.size < groupIndex) {
+                telegramService.sendMessage(msg.chatId, "Нет такого индекса")
+                return
+            }
+            val sub = subs[groupIndex - 1]
+            sub.status = "DEAD"
+            dataLayer.saveSub(sub)
+            telegramService.sendMessage(msg.chatId, "Подписка успешно удалена")
+            if (sub.userId != null) {
+                telegramService.removeUserFromGroup(sub.group.id, sub.userId!!)
+            }
+
         } else if (args?.getOrNull(0) in arrayOf("/list")) {
-            TODO()
+            val subs = dataLayer.getUserSubs(msg.chatId)
+
+            if (subs.isEmpty()) {
+                telegramService.sendMessage(msg.chatId, "У вас нет активных подписок")
+            } else {
+                var textPay = "Подписки которые вы оплачиваете:\n"
+                var textSub = "Подписки активные для вас:\n"
+                var i = 0
+                for (sub in subs) {
+                    i += 1
+                    if (sub.userId == msg.chatId) {
+                        textSub += "${i}: \"${sub.group.searchName}\"\nПодписка активна до: ${sub.nextPayment?:"Error"}\n\n"
+                    }
+                    if (sub.createdByUserId == msg.chatId) {
+                        textPay += "${i}: \"${sub.group.searchName}\"\nПодписка активна до: ${sub.nextPayment?:"Error"}\n\n"
+                    }
+                }
+                telegramService.sendMessage(msg.chatId, textPay)
+                telegramService.sendMessage(msg.chatId, textSub)
+            }
         }
     }
 

@@ -14,7 +14,7 @@ class SubscriptionService(
 ) {
 
     private val logger = LoggerFactory.getLogger("Subscription")
-    @Scheduled(fixedDelay = 1000)
+    @Scheduled(fixedDelay = 5000)
     fun manageSubs() {
         for (sub in dataLayer.getExpiredSubs()) {
             if (!dataLayer.hasActivePay(sub.id)) {
@@ -24,18 +24,21 @@ class SubscriptionService(
         }
         for (sub in dataLayer.getUnpaidSubs()) {
             if (Instant.now().isAfter(sub.createdDate.toInstant().plusSeconds(3600))) {
-                telegramService.sendMessage(sub.createdByUserId, "Qr по ссылке ${sub.qrUrl} больше не активен") //TODO указать имя группы
+                telegramService.sendMessage(sub.createdByUserId, "Qr на оплату подписки \"${sub.group.searchName}\" по ссылке ${sub.qrUrl} больше не активен")
                 logger.info("Subscription(${sub.id}) has expired")
-//                dataLayer.deleteSub(sub.id) TODO делать подписку dead
+                sub.status = "DEAD"
+                dataLayer.saveSub(sub)
                 continue
             }
-            if (utilityService.getSubQr(sub.id)?.getString("status") == "SUBSCRIBED") { //TODO проверка подписки
+            if (utilityService.getSubQr(sub.id)?.getString("status") == "SUBSCRIBED") {
                 logger.info("Subscription(${sub.id}) has paid")
                 val link = telegramService.createInviteLink(sub.group.id)
                 sub.nextPayment = Date.from(Instant.now())
                 sub.inviteLink = link.inviteLink
                 dataLayer.saveSub(sub)
-                telegramService.sendMessage(sub.createdByUserId, "Подписка успешно оплачена.\nВаша ссылка ${link.inviteLink}. Вы можете как воспользоваться ей сами так и поделиться с кем-то") //TODO указать имя группы
+                telegramService.sendMessage(sub.createdByUserId, "Подписка на группу ${sub.group.searchName} успешно оплачена.\n" +
+                        "Ваша ссылка ${link.inviteLink}.\n" +
+                        "Вы можете как воспользоваться ей сами так и поделиться с кем-то")
             }
         }
 
@@ -71,11 +74,12 @@ class SubscriptionService(
 
     fun declinePayment(subId: Int) {
         val sub = dataLayer.getSub(subId) ?: throw Exception()
-        //TODO делать подписку невалидной
-        //sub.status = "DEAD"
+        sub.status = "DEAD"
         if (sub.userId != null){
-            telegramService.sendMessage(sub.userId!!, "Не удалось списать деньги для оплаты подписки на группу \"${sub.group.searchName}\". Вы были отписаны от этой группы")
+            telegramService.sendMessage(sub.userId!!, "Не удалось списать деньги для оплаты подписки на группу \"${sub.group.searchName}\".\n" +
+                    "Ваша подписка была приостановлена ")
             telegramService.removeUserFromGroup(sub.group.id, sub.userId!!)
         }
+        dataLayer.saveSub(sub)
     }
 }

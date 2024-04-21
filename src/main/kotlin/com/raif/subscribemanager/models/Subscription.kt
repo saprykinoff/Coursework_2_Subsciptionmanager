@@ -3,6 +3,7 @@ package com.raif.subscribemanager.models
 import jakarta.persistence.*
 import org.springframework.data.annotation.CreatedDate
 import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
 import java.time.Instant
 import java.util.*
@@ -23,15 +24,16 @@ class Subscription (
     var createdDate: Date= Date.from(Instant.now()),
     @ManyToOne
     var group: GroupEntity = GroupEntity(),
-    //var status: String = "INACTIVE", //INACTIVE - подписка создана не оплачена, ACTIVE - подписка оплачена, DEAD - подписка аннулированна
+    var status: String = "INACTIVE", //INACTIVE - подписка создана не оплачена, ACTIVE - подписка оплачена, DEAD - подписка аннулированна
 )
 
 
 @Repository
 interface SubscriptionRepository : JpaRepository<Subscription, Int> {
-    fun findAllByUserId(id: Long): List<Subscription>
+    @Query("select s FROM Subscription s where (s.userId = ?1 or s.createdByUserId = ?1) and s.status<>\"DEAD\"")
+    fun findUserSubs(userId: Long): List<Subscription>
     fun findByInviteLink(link: String): Subscription?
-    fun findAllByNextPaymentBefore(date: Date): List<Subscription>
-    fun findAllByNextPaymentIsNull(): List<Subscription>
+    fun findAllByNextPaymentBeforeAndStatusNot(date: Date, status: String ): List<Subscription>
+    fun findAllByNextPaymentIsNullAndStatusNot(status: String ): List<Subscription>
 
 }
