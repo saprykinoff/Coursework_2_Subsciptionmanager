@@ -8,8 +8,6 @@ import org.springframework.context.event.EventListener
 import org.springframework.stereotype.Service
 import org.telegram.telegrambots.meta.api.objects.Message
 import org.telegram.telegrambots.meta.api.objects.Update
-import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
 
 @Service
 class TelegramManager (
