@@ -152,7 +152,12 @@ class TelegramManager (
     fun supergroupController(msg:Message) {
         val text = if (msg.hasText()) {msg.text} else {null}
         val args = text?.split(" ")
-        if (args?.getOrNull(0) in arrayOf("/reg", "/register")) {
+        var command = args?.getOrNull(0)
+        val botname = "@subscribeManager_sprffbot"
+        if (command?.contains(botname) == true) {
+            command = command.substring(0, command.length - botname.length)
+        }
+        if (command in arrayOf("/reg", "/register")) {
             logger.info("reg")
             val price = args?.getOrNull(2)?.toDoubleOrNull() ?: 100.0
             val period = args?.getOrNull(3)?.toIntOrNull() ?: 120
