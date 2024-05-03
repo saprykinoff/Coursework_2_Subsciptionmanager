@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service
 import org.telegram.telegrambots.meta.api.objects.ChatJoinRequest
 import org.telegram.telegrambots.meta.api.objects.Message
 import org.telegram.telegrambots.meta.api.objects.Update
+import org.telegram.telegrambots.meta.exceptions.TelegramApiRequestException
 
 @Service
 class TelegramManager (
@@ -89,6 +90,12 @@ class TelegramManager (
                 telegramService.sendMessage(msg.chatId, "Группа не найдена")
                 return
             }
+            try{
+                telegramService.createInviteLink(group.id)
+            } catch (e: TelegramApiRequestException) {
+                telegramService.sendMessage(msg.chatId, "В данной группе у бота нет прав администратора. Сообщите об это создателю группы")
+                return
+            }
             val sub = utilityService.createSubscription(name, msg.from.id)
             if (sub == null) {
                 telegramService.sendMessage(msg.chatId, "Произошла ошибка. Попробуйте позже")
@@ -148,8 +155,7 @@ class TelegramManager (
         if (args?.getOrNull(0) in arrayOf("/reg", "/register")) {
             logger.info("reg")
             val price = args?.getOrNull(2)?.toDoubleOrNull() ?: 100.0
-            val period = args?.getOrNull(3)?.toIntOrNull() ?: 30
-
+            val period = args?.getOrNull(3)?.toIntOrNull() ?: 120
             try {
                 val group = dataLayer.registerGroup(msg.chatId, msg.from.id, args?.getOrNull(1), price, period)
                 telegramService.sendMessage(msg.chatId, "Группа \"${group.searchName}\" зарегестриована на пользователя ${group.ownerId}.\n" +
@@ -159,7 +165,7 @@ class TelegramManager (
                     is EmptyGroupNameError,
                     is GroupAlreadyRegisteredError,
                     is GroupNameAlreadyExistsError -> {
-                        telegramService.sendMessage(msg.chatId, e.toString(), replyTo = msg.messageId)
+                        telegramService.sendMessage(msg.chatId, e.message!!, replyTo = msg.messageId)
                     }
                     else -> throw e
                 }
