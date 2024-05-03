@@ -1,6 +1,8 @@
 package com.raif.subscribemanager.models
 
 import jakarta.persistence.*
+import org.hibernate.annotations.CreationTimestamp
+import org.hibernate.annotations.DynamicInsert
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
@@ -20,7 +22,8 @@ class Subscription (
     var createdByUserId: Long = 0,
     var inviteLink: String = "",
     var nextPayment: Date? = null,
-    var createdDate: Date= Date.from(Instant.now()),
+    @Column(insertable = false, updatable = false, columnDefinition = "TIMESTAMP with time zone DEFAULT CURRENT_TIMESTAMP")
+    var createdDate: Date? = null,
     @ManyToOne
     var group: GroupEntity = GroupEntity(),
     var status: String = "INACTIVE", //INACTIVE - подписка создана не оплачена, ACTIVE - подписка оплачена, DEAD - подписка аннулированна

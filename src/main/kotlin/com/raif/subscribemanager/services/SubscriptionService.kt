@@ -23,7 +23,7 @@ class SubscriptionService(
             }
         }
         for (sub in dataLayer.getUnpaidSubs()) {
-            if (Instant.now().isAfter(sub.createdDate.toInstant().plusSeconds(3600))) {
+            if (Instant.now().isAfter(sub.createdDate!!.toInstant().plusSeconds(3600))) {
                 telegramService.sendMessage(sub.createdByUserId, "Qr на оплату подписки \"${sub.group.searchName}\" по ссылке ${sub.qrUrl} больше не активен")
                 logger.info("Subscription(${sub.id}) has expired")
                 sub.status = "DEAD"
@@ -36,7 +36,7 @@ class SubscriptionService(
                 sub.nextPayment = Date.from(Instant.now())
                 sub.inviteLink = link.inviteLink
                 dataLayer.saveSub(sub)
-                telegramService.sendMessage(sub.createdByUserId, "Подписка на группу ${sub.group.searchName} успешно оплачена.\n" +
+                telegramService.sendMessage(sub.createdByUserId, "Подписка на группу ${sub.group.searchName} успешно оформлена. В ближайшее время с вас спишутся деньги\n" +
                         "Ваша ссылка ${link.inviteLink}.\n" +
                         "Вы можете как воспользоваться ей сами так и поделиться с кем-то")
             }

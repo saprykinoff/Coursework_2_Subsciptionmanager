@@ -11,7 +11,7 @@ class UtilityService(
     private val dataLayer: DataLayer,
     private val telegramService: TelegramService,
 ) {
-    val idVersion = "test_1"
+    val idVersion = "prod" // TODO не забыть поменять на prod
 
     private val logger = LoggerFactory.getLogger("Utility")
     fun secondsToTime(secs: Int): String {
