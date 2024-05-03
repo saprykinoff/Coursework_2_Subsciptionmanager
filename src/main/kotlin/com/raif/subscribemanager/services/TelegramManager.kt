@@ -6,6 +6,7 @@ import com.raif.subscribemanager.errors.GroupNameAlreadyExistsError
 import org.slf4j.LoggerFactory
 import org.springframework.context.event.EventListener
 import org.springframework.stereotype.Service
+import org.telegram.telegrambots.meta.api.objects.ChatJoinRequest
 import org.telegram.telegrambots.meta.api.objects.Message
 import org.telegram.telegrambots.meta.api.objects.Update
 
@@ -24,56 +25,21 @@ class TelegramManager (
 
         if (update.hasMessage()) {
             val msg = update.message
-            if (msg.text == "/test") {
-                //TODO сделать работующие функции создания\получения подписки\пеймента
-                val sub = utilityService.createSubscription("abc", msg.from.id) ?: return
-                var qr = utilityService.getSubQr(sub.id) ?: return
-                while (qr.getString("status") == "INACTIVE") {
-                    qr = utilityService.getSubQr(sub.id) ?: return
-                    Thread.sleep(1000)
-                }
-                println("SUBSCRIBED")
-                val pay = utilityService.createPaySubQr(sub.id, 123.0) ?: return
-                println(pay.id)
-                while (true ) {
-                    println("polling...")
-                    val payres = utilityService.getPaySubQr(pay.id)
-                    println( payres )
-                    Thread.sleep(1000)
-                }
-            }
             if (msg.chat.isUserChat) {
                 userController(msg)
             } else if (msg.chat.isSuperGroupChat) {
                 supergroupController(msg)
+            } else if (msg.chat.isGroupChat) {
+                telegramService.sendMessage(msg.chatId, "Для работы бота необхоимо чтобы группа была супергруппой.\n" +
+                        "Для этого включите (а затем отключите если это необходимо) историю сообщений через:\n" +
+                        "Три точки -> Manage group -> Chat history")
+            } else {
+                telegramService.sendMessage(msg.chatId, "В данный момент бот работает только в супергруппах")
             }
         }
 
         if (update.hasChatJoinRequest()) {
-            val req = update.chatJoinRequest
-            val sub = dataLayer.getSubByLink(req.inviteLink.inviteLink)
-            if (sub != null) {
-                if (sub.nextPayment == null) {
-                    telegramService.sendMessage(req.user.id, "Сначала необходимо оплатить подписку")
-                    telegramService.declineRequest(req)
-                    return
-                }
-                if (sub.userId == null) {
-                    sub.userId = req.user.id
-                    dataLayer.saveSub(sub)
-                }
-
-                if (sub.userId == req.user.id ) {
-                    telegramService.approveRequest(req)
-                    logger.info("Accept user ${req.user.id} to group ${req.chat.id}")
-                } else {
-                    telegramService.declineRequest(req)
-                    logger.info("Decline user ${req.user.id} to group ${req.chat.id}")
-                    telegramService.sendMessage(req.user.id, "Данная ссылка уже была кем-то использована")
-                }
-            } else {
-                logger.info("Ignore user ${req.user.id} to group ${req.chat.id}")
-            }
+            joinRequestController( update.chatJoinRequest)
         }
 
     }
@@ -180,12 +146,13 @@ class TelegramManager (
         val text = if (msg.hasText()) {msg.text} else {null}
         val args = text?.split(" ")
         if (args?.getOrNull(0) in arrayOf("/reg", "/register")) {
+            logger.info("reg")
             val price = args?.getOrNull(2)?.toDoubleOrNull() ?: 100.0
             val period = args?.getOrNull(3)?.toIntOrNull() ?: 30
 
             try {
                 val group = dataLayer.registerGroup(msg.chatId, msg.from.id, args?.getOrNull(1), price, period)
-                telegramService.sendMessage(msg.chatId, "Группа ${group.searchName} зарегестриована на пользователя ${group.ownerId}.\n" +
+                telegramService.sendMessage(msg.chatId, "Группа \"${group.searchName}\" зарегестриована на пользователя ${group.ownerId}.\n" +
                         "Цена: ${group.price} рублей за ${utilityService.secondsToTime(group.period)}")
             } catch (e: Exception) {
                 when (e) {
@@ -201,6 +168,32 @@ class TelegramManager (
 
         }
 
+    }
+
+    fun joinRequestController(req: ChatJoinRequest) {
+        val sub = dataLayer.getSubByLink(req.inviteLink.inviteLink)
+        if (sub != null) {
+            if (sub.nextPayment == null) {
+                telegramService.sendMessage(req.user.id, "Сначала необходимо оплатить подписку")
+                telegramService.declineRequest(req)
+                return
+            }
+            if (sub.userId == null) {
+                sub.userId = req.user.id
+                dataLayer.saveSub(sub)
+            }
+
+            if (sub.userId == req.user.id ) {
+                telegramService.approveRequest(req)
+                logger.info("Accept user ${req.user.id} to group ${req.chat.id}")
+            } else {
+                telegramService.declineRequest(req)
+                logger.info("Decline user ${req.user.id} to group ${req.chat.id}")
+                telegramService.sendMessage(req.user.id, "Данная ссылка уже была кем-то использована")
+            }
+        } else {
+            logger.info("Ignore user ${req.user.id} to group ${req.chat.id}")
+        }
     }
 
 }

@@ -65,10 +65,13 @@ class SubscriptionService(
     fun successPayment(subId: Int) {
         val sub = dataLayer.getSub(subId) ?: throw Exception()
         //sub.status = "ACTIVE"
-        if (sub.userId != null){
-            telegramService.sendMessage(sub.userId!!, "Ваша подписка на группу \"${sub.group.searchName}\" продлена")
-        }
         sub.nextPayment = Date.from(Instant.now().plusSeconds(sub.group.period.toLong()))
+        if (sub.userId != null && sub.userId != sub.createdByUserId){
+            telegramService.sendMessage(sub.userId!!, "Ваша подписка на группу \"${sub.group.searchName}\" продлена.\n" +
+                    "Новая дата оплаты ${sub.nextPayment}")
+        }
+        telegramService.sendMessage(sub.createdByUserId, "Ваша подписка на группу \"${sub.group.searchName}\" продлена.\n" +
+                "Новая дата оплаты ${sub.nextPayment}")
         dataLayer.saveSub(sub)
     }
 
