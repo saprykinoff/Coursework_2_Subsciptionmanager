@@ -12,7 +12,7 @@ import java.util.*
 
 @Entity
 @Table(name = "subs")
-class Subscription (
+class Subscription(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Int = 0,
@@ -22,7 +22,11 @@ class Subscription (
     var createdByUserId: Long = 0,
     var inviteLink: String = "",
     var nextPayment: Date? = null,
-    @Column(insertable = false, updatable = false, columnDefinition = "TIMESTAMP with time zone DEFAULT CURRENT_TIMESTAMP")
+    @Column(
+        insertable = false,
+        updatable = false,
+        columnDefinition = "TIMESTAMP with time zone DEFAULT CURRENT_TIMESTAMP"
+    )
     var createdDate: Date? = null,
     @ManyToOne
     var group: GroupEntity = GroupEntity(),
@@ -35,7 +39,7 @@ interface SubscriptionRepository : JpaRepository<Subscription, Int> {
     @Query("select s FROM Subscription s where (s.userId = ?1 or s.createdByUserId = ?1) and s.status<>\"DEAD\"")
     fun findUserSubs(userId: Long): List<Subscription>
     fun findByInviteLink(link: String): Subscription?
-    fun findAllByNextPaymentBeforeAndStatusNot(date: Date, status: String ): List<Subscription>
-    fun findAllByNextPaymentIsNullAndStatusNot(status: String ): List<Subscription>
+    fun findAllByNextPaymentBeforeAndStatusNot(date: Date, status: String): List<Subscription>
+    fun findAllByNextPaymentIsNullAndStatusNot(status: String): List<Subscription>
 
 }

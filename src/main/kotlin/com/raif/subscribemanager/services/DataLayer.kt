@@ -13,7 +13,13 @@ class DataLayer(
     private val subscriptionRepository: SubscriptionRepository,
     private val paymentRepository: PaymentRepository,
 ) {
-    fun registerGroup(chatId: Long, ownerId: Long, name: String?, price: Double = 100.0, period: Int= 60): GroupEntity {
+    fun registerGroup(
+        chatId: Long,
+        ownerId: Long,
+        name: String?,
+        price: Double = 100.0,
+        period: Int = 60
+    ): GroupEntity {
         if (name == null || name == "") {
             throw EmptyGroupNameError()
         }
@@ -24,34 +30,41 @@ class DataLayer(
         if (groupEntityRepository.findBySearchName(name) != null) {
             throw GroupNameAlreadyExistsError()
         }
-        val newGroup = GroupEntity(chatId, name, price,period, ownerId)
+        val newGroup = GroupEntity(chatId, name, price, period, ownerId)
         groupEntityRepository.saveAndFlush(newGroup)
         return newGroup
     }
+
     fun findGroup(name: String?): GroupEntity? {
         if (name == null) return null
         return groupEntityRepository.findBySearchName(name)
     }
 
 
-    fun getSub(subId: Int) :Subscription? {
+    fun getSub(subId: Int): Subscription? {
         return subscriptionRepository.findById(subId).getOrNull()
     }
+
     fun saveSub(sub: Subscription) {
         subscriptionRepository.saveAndFlush(sub)
     }
+
     fun deleteSub(id: Int) {
         subscriptionRepository.deleteById(id)
     }
+
     fun getSubByLink(link: String): Subscription? {
         return subscriptionRepository.findByInviteLink(link)
     }
+
     fun getExpiredSubs(): List<Subscription> {
         return subscriptionRepository.findAllByNextPaymentBeforeAndStatusNot(Date.from(Instant.now()), "DEAD")
     }
+
     fun getUnpaidSubs(): List<Subscription> {
         return subscriptionRepository.findAllByNextPaymentIsNullAndStatusNot("DEAD")
     }
+
     fun getUserSubs(userId: Long): List<Subscription> {
         return subscriptionRepository.findUserSubs(userId)
     }
@@ -60,6 +73,7 @@ class DataLayer(
     fun getActivePays(): List<Payment> {
         return paymentRepository.findAllByStatus("IN_PROGRESS")
     }
+
     fun savePay(pay: Payment) {
         paymentRepository.saveAndFlush(pay)
     }
@@ -67,9 +81,11 @@ class DataLayer(
     fun createPay(subId: Int): Payment {
         return paymentRepository.saveAndFlush(Payment(subId = subId))
     }
+
     fun getPay(id: Int): Payment? {
         return paymentRepository.findById(id).getOrNull()
     }
+
     fun hasActivePay(subId: Int): Boolean {
         return paymentRepository.findBySubIdAndStatus(subId, "IN_PROGRESS") != null
     }

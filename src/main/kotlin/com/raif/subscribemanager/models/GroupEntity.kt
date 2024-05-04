@@ -8,7 +8,7 @@ import org.springframework.stereotype.Repository
 
 @Entity
 @Table(name = "groups")
-class GroupEntity (
+class GroupEntity(
     @Id
     val id: Long = 0,
     var searchName: String = "",

@@ -14,6 +14,7 @@ import org.telegram.telegrambots.updatesreceivers.DefaultBotSession
 @EnableScheduling
 @EnableJpaAuditing
 class SubscribeManagerApplication
+
 fun main(args: Array<String>) {
     runApplication<SubscribeManagerApplication>(*args)
 }

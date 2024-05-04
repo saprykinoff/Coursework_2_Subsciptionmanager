@@ -64,7 +64,14 @@ class TelegramService(
         return e.messageId
     }
 
-    fun sendPhoto(chatId: Long, url: String, text: String = "", replyMarkup: ReplyKeyboard? = null, markdown: Boolean = false, replyTo: Int? = null): Int {
+    fun sendPhoto(
+        chatId: Long,
+        url: String,
+        text: String = "",
+        replyMarkup: ReplyKeyboard? = null,
+        markdown: Boolean = false,
+        replyTo: Int? = null
+    ): Int {
 
         val send = SendPhoto(chatId.toString(), InputFile(url))
         send.caption = text

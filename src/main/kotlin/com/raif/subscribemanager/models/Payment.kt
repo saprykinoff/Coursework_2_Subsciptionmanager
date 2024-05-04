@@ -10,7 +10,7 @@ import org.springframework.stereotype.Repository
 import java.util.*
 
 @Entity
-class Payment (
+class Payment(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Int = 0,

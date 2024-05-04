@@ -18,7 +18,7 @@ class UtilityService(
         return "$secs секунд"
     }
 
-    fun createSubscription(name: String, createdByUserId: Long) : Subscription? {
+    fun createSubscription(name: String, createdByUserId: Long): Subscription? {
         val sub = Subscription()
         sub.group = dataLayer.findGroup(name) ?: return null
         dataLayer.saveSub(sub)
@@ -50,7 +50,7 @@ class UtilityService(
         return sub
     }
 
-    fun getSubQr(id: Int) : JSONObject? {
+    fun getSubQr(id: Int): JSONObject? {
         val response = khttp.get(
             "http://147.78.66.234:8081/payment-api/v1/subscription/sub_${idVersion}_$id"
         )
@@ -61,7 +61,7 @@ class UtilityService(
         }
     }
 
-    fun createPaySubQr(subId: Int, amount: Double) : Payment? {
+    fun createPaySubQr(subId: Int, amount: Double): Payment? {
         val pay = dataLayer.createPay(subId)
         val response = khttp.post(
             "http://147.78.66.234:8081/payment-api/v1/subscription/pay/sub_${idVersion}_$subId",
@@ -79,16 +79,17 @@ class UtilityService(
         return pay
     }
 
-    fun getPaySubQr(payId: Int ) : JSONObject? {
-        logger.info("getPay {}",payId)
+    fun getPaySubQr(payId: Int): JSONObject? {
+        logger.info("getPay {}", payId)
         val pay = dataLayer.getPay(payId) ?: return null
         val subId = pay.subId
-        val url = "http://147.78.66.234:8081/payment-api/v1/subscription/pay/sub_${idVersion}_$subId/orders/pay_${idVersion}_$payId"
-        logger.info("getPay {}",url)
+        val url =
+            "http://147.78.66.234:8081/payment-api/v1/subscription/pay/sub_${idVersion}_$subId/orders/pay_${idVersion}_$payId"
+        logger.info("getPay {}", url)
         val response = khttp.get(
             url
         )
-        logger.info("getPay {}",response.text)
+        logger.info("getPay {}", response.text)
 
         if (response.statusCode != 200) {
             return null
