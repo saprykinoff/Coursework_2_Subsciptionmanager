@@ -8,8 +8,7 @@ import org.springframework.stereotype.Service
 
 @Service
 class UtilityService(
-    private val dataLayer: DataLayer,
-    private val telegramService: TelegramService,
+    private val dataLayer: DataLayer
 ) {
     val idVersion = "prod" // TODO не забыть поменять на prod
 
