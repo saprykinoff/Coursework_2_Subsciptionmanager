@@ -149,13 +149,19 @@ class TelegramManager(
                 var i = 0
                 for (sub in subs) {
                     i += 1
-                    if (sub.userId == msg.chatId) {
-                        textSub += "${i}: \"${sub.group.searchName}\"\nПодписка активна до: ${sub.nextPayment ?: "Error"}\n\n"
+                    val until =  if( sub.nextPayment != null) {
+                        "Подписка активна до: ${sub.nextPayment}"
+                    } else {
+                        "Подписка не активна"
                     }
-                    if (sub.createdByUserId == msg.chatId) {
-                        textPay += "${i}: \"${sub.group.searchName}\"\nПодписка активна до: ${sub.nextPayment ?: "Error"}\n\n"
+                        if (sub.userId == msg.chatId) {
+                            textSub += "${i}: \"${sub.group.searchName}\"\n${until}}\n\n"
+                        }
+                        if (sub.createdByUserId == msg.chatId) {
+                            textPay += "${i}: \"${sub.group.searchName}\"\n${until}\n\n"
+                        }
+
                     }
-                }
                 telegramService.sendMessage(msg.chatId, textPay)
                 telegramService.sendMessage(msg.chatId, textSub)
             }
