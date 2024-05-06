@@ -191,10 +191,19 @@ class TelegramManager(
                     msg.from.id
                 }
                 val group = dataLayer.registerGroup(msg.chatId, from, args?.getOrNull(1), price, period)
-                telegramService.sendMessage(
-                    msg.chatId, "Группа \"${group.searchName}\" зарегестриована на пользователя ${group.ownerId}.\n" +
-                            "Цена: ${group.price} рублей за ${utilityService.secondsToTime(group.period)}"
-                )
+                if (from != 0L) {
+                    telegramService.sendMessage(
+                        msg.chatId,
+                        "Группа \"${group.searchName}\" зарегестриована на пользователя ${group.ownerId}.\n" +
+                                "Цена: ${group.price} рублей за ${utilityService.secondsToTime(group.period)}"
+                    )
+                } else {
+                    telegramService.sendMessage(
+                        msg.chatId,
+                        "Канал \"${group.searchName}\" зарегестриован.\n" +
+                                "Цена: ${group.price} рублей за ${utilityService.secondsToTime(group.period)}"
+                    )
+                }
             } catch (e: Exception) {
                 when (e) {
                     is EmptyGroupNameError,
