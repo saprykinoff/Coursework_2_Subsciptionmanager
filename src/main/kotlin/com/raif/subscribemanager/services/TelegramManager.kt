@@ -40,7 +40,11 @@ class TelegramManager(
                 telegramService.sendMessage(msg.chatId, "В данный момент бот работает только в супергруппах")
             }
         }
+        if (update.hasChannelPost()) {
+            logger.info("POST")
+            supergroupController(update.channelPost)
 
+        }
         if (update.hasChatJoinRequest()) {
             joinRequestController(update.chatJoinRequest)
         }
@@ -181,7 +185,12 @@ class TelegramManager(
             val price = args?.getOrNull(2)?.toDoubleOrNull() ?: 100.0
             val period = args?.getOrNull(3)?.toIntOrNull() ?: 120
             try {
-                val group = dataLayer.registerGroup(msg.chatId, msg.from.id, args?.getOrNull(1), price, period)
+                val from = if (msg.chat.isChannelChat) {
+                    0
+                } else {
+                    msg.from.id
+                }
+                val group = dataLayer.registerGroup(msg.chatId, from, args?.getOrNull(1), price, period)
                 telegramService.sendMessage(
                     msg.chatId, "Группа \"${group.searchName}\" зарегестриована на пользователя ${group.ownerId}.\n" +
                             "Цена: ${group.price} рублей за ${utilityService.secondsToTime(group.period)}"
