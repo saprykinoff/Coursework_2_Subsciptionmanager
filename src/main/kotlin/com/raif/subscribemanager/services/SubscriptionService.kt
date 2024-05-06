@@ -75,12 +75,12 @@ class SubscriptionService(
         sub.nextPayment = Date.from(Instant.now().plusSeconds(sub.group.period.toLong()))
         if (sub.userId != null && sub.userId != sub.createdByUserId) {
             telegramService.sendMessage(
-                sub.userId!!, "Ваша подписка на группу \"${sub.group.searchName}\" продлена.\n" +
+                sub.userId!!, "Ваша подписка на группу \"${sub.group.searchName}\" успешно оплачена.\n" +
                         "Новая дата оплаты ${sub.nextPayment}"
             )
         }
         telegramService.sendMessage(
-            sub.createdByUserId, "Ваша подписка на группу \"${sub.group.searchName}\" продлена.\n" +
+            sub.createdByUserId, "Ваша подписка на группу \"${sub.group.searchName}\" успешно оплачена.\n" +
                     "Новая дата оплаты ${sub.nextPayment}"
         )
         dataLayer.saveSub(sub)
@@ -92,7 +92,7 @@ class SubscriptionService(
         if (sub.userId != null) {
             telegramService.sendMessage(
                 sub.userId!!, "Не удалось списать деньги для оплаты подписки на группу \"${sub.group.searchName}\".\n" +
-                        "Ваша подписка была приостановлена "
+                        "Ваша подписка была приостановлена. "
             )
             telegramService.removeUserFromGroup(sub.group.id, sub.userId!!)
         }
